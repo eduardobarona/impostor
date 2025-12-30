@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego del Impostor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .setup-screen, .play-screen, .reveal-screen {
+            display: none;
+        }
+
+        .setup-screen.active, .play-screen.active, .reveal-screen.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .player-list {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+        }
+
+        .remove-btn {
+            padding: 5px 15px;
+            width: auto;
+            margin: 0;
+            background: #e74c3c;
+            font-size: 14px;
+        }
+
+        .player-button {
+            font-size: 20px;
+            padding: 25px;
+            margin: 10px 0;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+
+        .reveal-card {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            color: white;
+            margin: 20px 0;
+        }
+
+        .reveal-card.impostor {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .reveal-card h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .reveal-card p {
+            font-size: 1.5em;
+        }
+
+        .word-display {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .back-btn {
+            background: #95a5a6;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎭 El Impostor</h1>
+        
+        <!-- Pantalla de configuración -->
+        <div class="setup-screen active">
+            <div class="input-group">
+                <label for="playerName">Nombre del jugador:</label>
+                <input type="text" id="playerName" placeholder="Escribe un nombre">
+            </div>
+            <button onclick="addPlayer()">➕ Agregar Jugador</button>
+            
+            <div class="player-list" id="playerList"></div>
+            
+            <button onclick="startGame()" id="startBtn" style="display:none;">🎮 Iniciar Juego</button>
+        </div>
+
+        <!-- Pantalla de juego -->
+        <div class="play-screen">
+            <h2 style="text-align:center; color:#667eea; margin-bottom:20px;">Turno de los jugadores</h2>
+            <p style="text-align:center; margin-bottom:30px;">Cada jugador debe presionar su nombre para ver su rol</p>
+            <div id="playerButtons"></div>
+            <button class="back-btn" onclick="resetGame()">🔄 Nueva Partida</button>
+        </div>
+
+        <!-- Pantalla de revelación -->
+        <div class="reveal-screen">
+            <div class="reveal-card" id="revealCard">
+                <h2 id="revealTitle"></h2>
+                <div class="word-display" id="wordDisplay"></div>
+                <p id="revealText"></p>
+            </div>
+            <button onclick="backToPlayers()" id="nextPlayerBtn">✅ Siguiente Jugador</button>
+            <button onclick="playAgain()" id="playAgainBtn" style="display:none;">🔄 Jugar Otra Vez</button>
+            <button class="back-btn" onclick="resetGame()" id="newGameBtn" style="display:none;">🏠 Cambiar Jugadores</button>
+        </div>
+    </div>
+
+    <script>
+        const words = [
+            "Lámpara", "Silla", "Mesa", "Teléfono", "Computadora",
+            "Lápiz", "Libro", "Televisión", "Refrigerador", "Cama",
+            "Zapato", "Reloj", "Puerta", "Ventana", "Carro",
+            "Bicicleta", "Árbol", "Flor", "Perro", "Gato",
+            "Pizza", "Hamburguesa", "Helado", "Café", "Agua",
+            "Pelota", "Guitarra", "Piano", "Micrófono", "Cámara",
+            "Avión", "Barco", "Tren", "Playa", "Montaña",
+            "Sol", "Luna", "Estrella", "Nube", "Lluvia"
+        ];
+
+        let players = [];
+        let gameData = [];
+        let currentWord = "";
+
+        function addPlayer() {
+            const input = document.getElementById('playerName');
+            const name = input.value.trim();
+            
+            if (name === '') {
+                alert('Por favor escribe un nombre');
+                return;
+            }
+            
+            if (players.includes(name)) {
+                alert('Este jugador ya está en la lista');
+                return;
+            }
+            
+            players.push(name);
+            input.value = '';
+            updatePlayerList();
+        }
+
+        function updatePlayerList() {
+            const list = document.getElementById('playerList');
+            const startBtn = document.getElementById('startBtn');
+            
+            if (players.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:#999;">No hay jugadores todavía</p>';
+                startBtn.style.display = 'none';
+            } else {
+                list.innerHTML = players.map((player, index) => `
+                    <div class="player-item">
+                        <span>${player}</span>
+                        <button class="remove-btn" onclick="removePlayer(${index})">✖</button>
+                    </div>
+                `).join('');
+                startBtn.style.display = players.length >= 3 ? 'block' : 'none';
+            }
+        }
+
+        function removePlayer(index) {
+            players.splice(index, 1);
+            updatePlayerList();
+        }
+
+        function startGame() {
+            if (players.length < 3) {
+                alert('Se necesitan al menos 3 jugadores');
+                return;
+            }
+
+            currentWord = words[Math.floor(Math.random() * words.length)];
+            const impostorIndex = Math.floor(Math.random() * players.length);
+            
+            gameData = players.map((player, index) => ({
+                name: player,
+                isImpostor: index === impostorIndex,
+                revealed: false
+            }));
+
+            document.querySelector('.setup-screen').classList.remove('active');
+            document.querySelector('.play-screen').classList.add('active');
+            
+            displayPlayerButtons();
+        }
+
+        function displayPlayerButtons() {
+            const container = document.getElementById('playerButtons');
+            container.innerHTML = gameData
+                .filter(p => !p.revealed)
+                .map(player => `
+                    <button class="player-button" onclick="revealRole('${player.name}')">
+                        ${player.name}
+                    </button>
+                `).join('');
+        }
+
+        function revealRole(playerName) {
+            const player = gameData.find(p => p.name === playerName);
+            player.revealed = true;
+
+            const card = document.getElementById('revealCard');
+            const title = document.getElementById('revealTitle');
+            const wordDisplay = document.getElementById('wordDisplay');
+            const text = document.getElementById('revealText');
+
+            if (player.isImpostor) {
+                card.classList.add('impostor');
+                title.textContent = '🎭 ¡Eres el IMPOSTOR!';
+                wordDisplay.textContent = '???';
+                text.textContent = 'Debes adivinar la palabra sin que te descubran';
+            } else {
+                card.classList.remove('impostor');
+                title.textContent = '✅ Eres Inocente';
+                wordDisplay.textContent = currentWord;
+                text.textContent = 'Describe esta palabra sin ser muy obvio';
+            }
+
+            document.querySelector('.play-screen').classList.remove('active');
+            document.querySelector('.reveal-screen').classList.add('active');
+        }
+
+        function backToPlayers() {
+            const allRevealed = gameData.every(p => p.revealed);
+            
+            if (allRevealed) {
+                showGameFinished();
+                return;
+            }
+
+            document.querySelector('.reveal-screen').classList.remove('active');
+            document.querySelector('.play-screen').classList.add('active');
+            displayPlayerButtons();
+        }
+
+        function showGameFinished() {
+            const card = document.getElementById('revealCard');
+            const title = document.getElementById('revealTitle');
+            const wordDisplay = document.getElementById('wordDisplay');
+            const text = document.getElementById('revealText');
+
+            card.classList.remove('impostor');
+            card.style.background = 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)';
+            title.textContent = '🎮 ¡Todos listos!';
+            wordDisplay.textContent = currentWord;
+            text.textContent = '¡Que comience el juego! Encuentren al impostor 🕵️';
+
+            document.getElementById('nextPlayerBtn').style.display = 'none';
+            document.getElementById('playAgainBtn').style.display = 'block';
+            document.getElementById('newGameBtn').style.display = 'block';
+        }
+
+        function playAgain() {
+            currentWord = words[Math.floor(Math.random() * words.length)];
+            const impostorIndex = Math.floor(Math.random() * players.length);
+            
+            gameData = players.map((player, index) => ({
+                name: player,
+                isImpostor: index === impostorIndex,
+                revealed: false
+            }));
+
+            document.getElementById('nextPlayerBtn').style.display = 'block';
+            document.getElementById('playAgainBtn').style.display = 'none';
+            document.getElementById('newGameBtn').style.display = 'none';
+
+            document.querySelector('.reveal-screen').classList.remove('active');
+            document.querySelector('.play-screen').classList.add('active');
+            
+            displayPlayerButtons();
+        }
+
+        function resetGame() {
+            players = [];
+            gameData = [];
+            currentWord = "";
+            
+            document.querySelector('.play-screen').classList.remove('active');
+            document.querySelector('.reveal-screen').classList.remove('active');
+            document.querySelector('.setup-screen').classList.add('active');
+            
+            document.getElementById('nextPlayerBtn').style.display = 'block';
+            document.getElementById('playAgainBtn').style.display = 'none';
+            document.getElementById('newGameBtn').style.display = 'none';
+            
+            updatePlayerList();
+        }
+
+        // Permitir agregar jugador con Enter
+        document.getElementById('playerName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addPlayer();
+            }
+        });
+    </script>
+</body>
+</html>

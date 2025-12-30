@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juegos de Mesa</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 50px;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .game-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            color: white;
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .game-card.impostor {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .game-card.bingo {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .game-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .game-title {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .game-description {
+            font-size: 1.1em;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .games-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Juegos de Mesa</h1>
+        <p class="subtitle">Selecciona un juego para comenzar</p>
+
+        <div class="games-grid">
+            <a href="impostor.html" class="game-card impostor">
+                <span class="game-icon">🎭</span>
+                <div class="game-title">El Impostor</div>
+                <div class="game-description">
+                    Encuentra al impostor entre los jugadores. Un jugador recibe una palabra secreta mientras el impostor debe adivinarla sin ser descubierto.
+                </div>
+            </a>
+
+            <a href="bingo.html" class="game-card bingo">
+                <span class="game-icon">🎱</span>
+                <div class="game-title">Bingo</div>
+                <div class="game-description">
+                    Generador de números del 1 al 75. Perfecto para tus partidas de bingo con cartillas físicas.
+                </div>
+            </a>
+        </div>
+
+        <div class="footer">
+            <p>¡Diviértete jugando! 🎉</p>
+        </div>
+    </div>
+</body>
+</html>

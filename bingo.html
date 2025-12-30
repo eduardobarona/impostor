@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bingo 1-75</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        h1 {
+            color: #f5576c;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .current-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5em;
+            font-weight: bold;
+            margin: 30px auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .start-screen {
+            display: block;
+        }
+
+        .start-screen.hidden {
+            display: none;
+        }
+
+        .game-screen {
+            display: none;
+        }
+
+        .game-screen.active {
+            display: block;
+        }
+
+        button {
+            padding: 20px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .info {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .info p {
+            font-size: 1.2em;
+            color: #333;
+            margin: 10px 0;
+        }
+
+        .numbers-called {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .numbers-called h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .number-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            gap: 10px;
+        }
+
+        .number-item {
+            padding: 10px;
+            background: #667eea;
+            color: white;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .start-message {
+            font-size: 1.3em;
+            color: #666;
+            margin: 20px 0;
+        }
+
+        .completed {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            padding: 30px;
+            border-radius: 15px;
+            color: white;
+            margin: 20px 0;
+        }
+
+        .completed h2 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎱 BINGO</h1>
+        
+        <!-- Pantalla de inicio -->
+        <div class="start-screen" id="startScreen">
+            <p class="start-message">Generador de números de Bingo del 1 al 75</p>
+            <button onclick="startGame()">🎮 Iniciar Juego</button>
+        </div>
+
+        <!-- Pantalla de juego -->
+        <div class="game-screen" id="gameScreen">
+            <div class="current-number" id="currentNumber">-</div>
+            
+            <div class="info">
+                <p><strong>Números cantados:</strong> <span id="count">0</span> / 75</p>
+                <p><strong>Números restantes:</strong> <span id="remaining">75</span></p>
+            </div>
+
+            <button onclick="drawNumber()" id="drawBtn">🎲 Sacar Número</button>
+            <button class="reset-btn" onclick="resetGame()">🔄 Reiniciar</button>
+
+            <div class="numbers-called">
+                <h3>Números Cantados</h3>
+                <div class="number-grid" id="numbersList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let availableNumbers = [];
+        let calledNumbers = [];
+
+        function startGame() {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.add('active');
+            initGame();
+        }
+
+        function initGame() {
+            availableNumbers = [];
+            for (let i = 1; i <= 75; i++) {
+                availableNumbers.push(i);
+            }
+            calledNumbers = [];
+            updateDisplay();
+        }
+
+        function drawNumber() {
+            if (availableNumbers.length === 0) {
+                showCompleted();
+                return;
+            }
+
+            const randomIndex = Math.floor(Math.random() * availableNumbers.length);
+            const number = availableNumbers[randomIndex];
+            
+            availableNumbers.splice(randomIndex, 1);
+            calledNumbers.push(number);
+
+            document.getElementById('currentNumber').textContent = number;
+            document.getElementById('currentNumber').style.animation = 'none';
+            setTimeout(() => {
+                document.getElementById('currentNumber').style.animation = 'pulse 0.5s ease-in-out';
+            }, 10);
+
+            updateDisplay();
+
+            if (availableNumbers.length === 0) {
+                document.getElementById('drawBtn').disabled = true;
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('count').textContent = calledNumbers.length;
+            document.getElementById('remaining').textContent = availableNumbers.length;
+
+            const list = document.getElementById('numbersList');
+            if (calledNumbers.length === 0) {
+                list.innerHTML = '<p style="color:#999; grid-column: 1/-1;">No hay números cantados todavía</p>';
+            } else {
+                const sortedNumbers = [...calledNumbers].sort((a, b) => b - a);
+                list.innerHTML = sortedNumbers.map(num => 
+                    `<div class="number-item">${num}</div>`
+                ).join('');
+            }
+        }
+
+        function showCompleted() {
+            const container = document.querySelector('.game-screen');
+            const completed = document.createElement('div');
+            completed.className = 'completed';
+            completed.innerHTML = `
+                <h2>🎉 ¡Juego Completado!</h2>
+                <p>Se han cantado todos los 75 números</p>
+            `;
+            container.insertBefore(completed, container.firstChild);
+        }
+
+        function resetGame() {
+            document.getElementById('currentNumber').textContent = '-';
+            document.getElementById('currentNumber').style.animation = 'none';
+            document.getElementById('drawBtn').disabled = false;
+            
+            const completed = document.querySelector('.completed');
+            if (completed) {
+                completed.remove();
+            }
+
+            initGame();
+        }
+    </script>
+</body>
+</html>
